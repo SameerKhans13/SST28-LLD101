@@ -3,21 +3,22 @@ public class Main {
         System.out.println("=== Export Demo ===");
 
         ExportRequest req = new ExportRequest("Weekly Report", SampleData.longBody());
-        Exporter pdf = new PdfExporter();
-        Exporter csv = new CsvExporter();
-        Exporter json = new JsonExporter();
+        // build exporters via composition (encoder + deliverer)
+        Exporter pdf = new Exporter(new PdfEncoder(),
+                                    new SizeLimitedDeliverer(20, "PDF cannot handle content > 20 chars"));
+        Exporter csv = new Exporter(new CsvEncoder(), new SimpleDeliverer());
+        Exporter json = new Exporter(new JsonEncoder(), new SimpleDeliverer());
 
-        System.out.println("PDF: " + safe(pdf, req));
-        System.out.println("CSV: " + safe(csv, req));
-        System.out.println("JSON: " + safe(json, req));
+        System.out.println("PDF: " + check(pdf, req));
+        System.out.println("CSV: " + check(csv, req));
+        System.out.println("JSON: " + check(json, req));
     }
 
-    private static String safe(Exporter e, ExportRequest r) {
-        try {
-            ExportResult out = e.export(r);
-            return "OK bytes=" + out.bytes.length;
-        } catch (RuntimeException ex) {
-            return "ERROR: " + ex.getMessage();
+    private static String check(Exporter e, ExportRequest r) {
+        ExportResult out = e.export(r);
+        if (out.status == ExportResult.Status.ERROR) {
+            return "ERROR: " + out.message;
         }
+        return "OK bytes=" + out.bytes.length;
     }
 }

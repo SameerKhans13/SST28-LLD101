@@ -3,17 +3,17 @@ public class Main {
         System.out.println("=== Notification Demo ===");
         AuditLog audit = new AuditLog();
 
-        Notification n = new Notification("Welcome", "Hello and welcome to SST!", "riya@sst.edu", "9876543210");
+        EmailSender email = new EmailSender(audit);
+        SmsSender sms = new SmsSender(audit);
+        WhatsAppSender wa = new WhatsAppSender(audit);
 
-        NotificationSender email = new EmailSender(audit);
-        NotificationSender sms = new SmsSender(audit);
-        NotificationSender wa = new WhatsAppSender(audit);
-
-        email.send(n);
-        sms.send(n);
+        // build channel-specific notifications using factory (validates/normalizes)
+        email.send(NotificationFactory.createEmail("riya@sst.edu", "Welcome", "Hello and welcome to SST!"));
+        sms.send(NotificationFactory.createSms("9876543210", "Hello and welcome to SST!"));
         try {
-            wa.send(n);
+            wa.send(NotificationFactory.createWhatsApp("9876543210", "Hello and welcome to SST!"));
         } catch (RuntimeException ex) {
+            // factory may throw validation exception
             System.out.println("WA ERROR: " + ex.getMessage());
             audit.add("WA failed");
         }

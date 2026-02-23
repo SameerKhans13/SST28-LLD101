@@ -1,10 +1,11 @@
+/**
+ * Sends SMS notifications; ignores subjects since SmsNotification has none.
+ */
 public class SmsSender extends NotificationSender {
     public SmsSender(AuditLog audit) { super(audit); }
 
-    @Override
-    public void send(Notification n) {
-        // Ignores subject; base type doesn't clarify expectations (smell)
-        System.out.println("SMS -> to=" + n.phone + " body=" + n.body);
+    public void send(SmsNotification n) {
+        System.out.println("SMS -> to=" + n.toPhone + " body=" + n.body);
         audit.add("sms sent");
     }
 }
