@@ -59,3 +59,55 @@ Saved invoice: INV-1001 (lines=7)
 
 ## 10. Stretch goals
 - Add a second invoice for a staff member with different discount policy.
+
+---
+
+## 11. What was the Problem? (The "Before" State)
+
+In the initial problem statement, the code suffered from a severe violation of the Single Responsibility Principle. The `CafeteriaSystem` class—specifically its `checkout` method—was acting as a **"God Object"**, meaning it was trying to do everything at once.
+
+The major issues included:
+
+- **Mixed Responsibilities:** The `checkout` method handled looking up menu prices, doing math, formatting text, and saving files all in one place.
+
+- **Hard-coded Rules:** Tax rules (e.g., a flat 5%) and discount conditions were hard-coded directly into the method using `if/else` statements. If a new tax law passed or a new promotional discount was created, you would have to modify the core checkout logic.
+
+- **Coupled Formatting:** Business logic (calculating money) was mixed with presentation logic (string concatenation and layout). If you wanted to change the invoice format from plain text to JSON or HTML, you would risk breaking the mathematical calculations.
+
+- **Concrete Persistence:** The system relied on a concrete, in-memory storage class rather than an interface. This made the system rigidly tied to one way of saving data and made unit testing difficult because you couldn't easily "mock" the database.
+
+---
+
+## 12. How it was Solved (The Refactored State)
+
+The solution fixed these issues by breaking the giant `CafeteriaSystem` apart into smaller, dedicated components, ensuring each class only had **one reason to change**.
+
+### A. Extracting Tax and Discount Rules (Strategy Pattern)
+
+Instead of hard-coding the math, the solution abstracted the rules behind interfaces (e.g., `ITaxStrategy`, `IDiscountStrategy`).
+
+Concrete classes like `StudentTaxStrategy` and `StudentDiscountStrategy` were created.
+
+> **Why this helps:** If you want to accomplish the stretch goal (adding a staff member discount), you simply create a new `StaffDiscountStrategy` class that implements the interface. The core `CafeteriaSystem` doesn't need to be modified at all.
+
+### B. Isolating Invoice Formatting
+
+The string generation was completely removed from the billing calculations and moved into a dedicated `InvoiceFormatter` component.
+
+The billing logic now calculates the raw numbers (Subtotal, Tax, Discount, Total) and passes a raw data object (`InvoiceData`) to the formatter.
+
+> **Why this helps:** The exact text alignment, line order, and headers are now managed entirely by the formatter. Changing the format never touches the business logic.
+
+### C. Abstracting Persistence
+
+The direct dependency on the concrete file-store was replaced with the `IInvoiceStore` interface.
+
+> **Why this helps:** `CafeteriaSystem` now just calls `store.save(invoice)`. It doesn't care if the invoice is being saved to an in-memory list, a SQL database, or a text file.
+
+### D. Reducing `CafeteriaSystem` to an Orchestrator
+
+In the final solution, the `CafeteriaSystem.checkout()` method no longer does the heavy lifting. Instead, it acts as a **pure coordinator**:
+
+1. It asks the **Rules Components** (`BillCalculator`, `TaxRules`, `DiscountRules`) for the tax and discount amounts.
+2. It asks the **Formatter** (`InvoiceFormatter`) to turn those numbers into an invoice string.
+3. It asks the **Repository** (`IInvoiceStore`) to save the result.
