@@ -25,20 +25,33 @@ public class MetricsRegistry implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private static MetricsRegistry INSTANCE; // BROKEN: not volatile, not thread-safe
+    /*
+     * Guard flag used by the private constructor to detect reflective or
+     * second-time instantiation attempts.  Once the singleton has been created
+     * the flag flips and any subsequent constructor invocation will throw.
+     */
+    private static boolean instanceCreated = false;
+
     private final Map<String, Long> counters = new HashMap<>();
 
-    // BROKEN: should be private and should prevent second construction
-    public MetricsRegistry() {
-        // intentionally empty
+    // constructor is private to prevent normal instantiation
+    private MetricsRegistry() {
+        if (instanceCreated) {
+            throw new IllegalStateException("Singleton already created");
+        }
+        instanceCreated = true;
     }
 
-    // BROKEN: racy lazy init; two threads can create two instances
+    /**
+     * Holder class leverages JVM class loading guarantees to perform lazy,
+     * thread-safe initialization without synchronization.
+     */
+    private static class Holder {
+        static final MetricsRegistry INSTANCE = new MetricsRegistry();
+    }
+
     public static MetricsRegistry getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new MetricsRegistry();
-        }
-        return INSTANCE;
+        return Holder.INSTANCE;
     }
 
     public synchronized void setCount(String key, long value) {
@@ -57,5 +70,11 @@ public class MetricsRegistry implements Serializable {
         return Collections.unmodifiableMap(new HashMap<>(counters));
     }
 
-    // TODO: implement readResolve() to preserve singleton on deserialization
+    /**
+     * Ensure that deserialization returns the singleton instance instead of a
+     * new object.
+     */
+    private Object readResolve() {
+        return getInstance();
+    }
 }
