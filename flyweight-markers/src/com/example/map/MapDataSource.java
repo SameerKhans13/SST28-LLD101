@@ -5,22 +5,23 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Generates markers for demo/testing.
+ * Generates markers for demo/testing using a flyweight style factory.
  *
- * CURRENT STATE (BROKEN ON PURPOSE):
- * - Creates new MarkerStyle per MapMarker via MapMarker constructor.
- *
- * TODO (student):
- * - After introducing MarkerStyleFactory, refactor so identical styles are shared.
- * - Suggested approach:
- *   1) Change MapMarker to accept MarkerStyle directly
- *   2) Use MarkerStyleFactory.get(shape,color,size,filled) here
+ * After refactor the data source holds a `MarkerStyleFactory` and asks it for
+ * styles instead of creating `new MarkerStyle(...)` each time. This ensures
+ * that identical configurations are shared rather than duplicated.
  */
 public class MapDataSource {
 
     private static final String[] SHAPES = {"PIN", "CIRCLE", "SQUARE"};
     private static final String[] COLORS = {"RED", "BLUE", "GREEN", "ORANGE"};
     private static final int[] SIZES = {10, 12, 14, 16};
+
+    private final MarkerStyleFactory styleFactory = new MarkerStyleFactory();
+
+    public MarkerStyleFactory getStyleFactory() {
+        return styleFactory;
+    }
 
     public List<MapMarker> loadMarkers(int count) {
         Random rnd = new Random(7);
@@ -37,7 +38,8 @@ public class MapDataSource {
             int size = SIZES[rnd.nextInt(SIZES.length)];
             boolean filled = rnd.nextBoolean();
 
-            out.add(new MapMarker(lat, lng, label, shape, color, size, filled));
+            MarkerStyle style = styleFactory.get(shape, color, size, filled);
+            out.add(new MapMarker(lat, lng, label, style));
         }
         return out;
     }

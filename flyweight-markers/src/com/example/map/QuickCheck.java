@@ -28,5 +28,6 @@ public class QuickCheck {
         System.out.println("Markers: " + n);
         System.out.println("Unique style instances (by identity): " + identities.size());
         System.out.println("Expected after Flyweight: <= " + (3 * 4 * 4 * 2) + " (shape*color*size*filled)");
+        System.out.println("Factory cache size: " + ds.getStyleFactory().cacheSize());
     }
 }
