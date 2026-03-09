@@ -1,13 +1,13 @@
 package com.example.reports;
 
 /**
- * CURRENT STATE (BROKEN ON PURPOSE):
- * - Concrete class used directly by clients
- * - Expensive load happens every time display() is called
- * - No access control
+ * Legacy class representing a report file.  After the proxy refactor this
+ * class is no longer used by client code; its logic has been moved into
+ * {@link RealReport}, which now serves as the real subject.  It remains here
+ * only for reference.
  *
- * TODO (student):
- * - Convert this into the RealSubject behind a Proxy, or replace with RealReport.
+ * (Original problems: clients called this directly, loading occurred on every
+ * display, and there was no access control.)
  */
 public class ReportFile {
 
