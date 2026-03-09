@@ -5,15 +5,17 @@ import java.util.Map;
 
 public class App {
     public static void main(String[] args) {
-        Map<String, PaymentGateway> gateways = new HashMap<>();
-        // TODO: register adapters instead of raw SDKs
-        // gateways.put("fastpay", new FastPayAdapter(new FastPayClient()));
-        // gateways.put("safecash", new SafeCashAdapter(new SafeCashClient()));
-        OrderService svc = new OrderService(gateways);
+        Map<String, PaymentGateway> registry = new HashMap<>();
+        registry.put("fastpay", new FastPayAdapter(new FastPayClient()));
+        registry.put("safecash", new SafeCashAdapter(new SafeCashClient()));
 
-        String id1 = svc.charge("fastpay", "cust-1", 1299);
-        String id2 = svc.charge("safecash", "cust-2", 1299);
-        System.out.println(id1);
-        System.out.println(id2);
+        // create a service for each provider and exercise it
+        for (Map.Entry<String, PaymentGateway> entry : registry.entrySet()) {
+            String name = entry.getKey();
+            PaymentGateway gateway = entry.getValue();
+            OrderService svc = new OrderService(gateway);
+            String tx = svc.createOrder("cust-" + name, 1299);
+            System.out.println(name + " -> " + tx);
+        }
     }
 }
