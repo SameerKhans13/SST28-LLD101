@@ -4,12 +4,13 @@ import com.example.tickets.TicketService;
 import java.util.List;
 
 /**
- * Starter demo that shows why mutability is risky.
+ * Problem: Originally, IncidentTicket was mutable. Anyone could change the values using setters 
+ * after the object was created (violating data integrity). This was very risky for audit logs 
+ * because the data could change randomly anywhere in the code.
  *
- * After refactor:
- * - direct mutation should not compile (no setters)
- * - external modifications to tags should not affect the ticket
- * - service "updates" should return a NEW ticket instance
+ * Solution: We made the class Immutable and used the Builder Design Pattern. 
+ * Now, once a ticket is created, it cannot be changed. If we need to "update" something, 
+ * we create a brand new ticket instance using the toBuilder() method. This makes our design very robust.
  */
 public class TryIt {
 

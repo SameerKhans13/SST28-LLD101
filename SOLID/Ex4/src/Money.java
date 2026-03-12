@@ -1,6 +1,10 @@
 public class Money {
-    public final double amount;
+    private final double amount;
+    public static final Money ZERO = new Money(0.0);
+
     public Money(double amount) { this.amount = round2(amount); }
+
+    public double getAmount() { return amount; }
 
     public Money plus(Money other) { return new Money(this.amount + other.amount); }
 

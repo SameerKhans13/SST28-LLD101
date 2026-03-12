@@ -1,16 +1,15 @@
 package com.example.reports;
 
 /**
- * Starter demo.
+ * Problem: Earlier, our ReportViewer was talking directly to the ReportFile. 
+ * This had major LLD issues:
+ * 1. No security (anyone could see any report).
+ * 2. Performance was bad because reports were loaded eagerly (immediately).
+ * 3. No caching (same report loaded multiple times).
  *
- * CURRENT BEHAVIOR:
- * - Everyone can open everything
- * - Disk load happens on every call
- *
- * AFTER REFACTOR:
- * - Client code should use ReportProxy
- * - Unauthorized access should be blocked
- * - Real report should load lazily and ideally once per proxy
+ * Solution: We implemented the Proxy Design Pattern. The ReportProxy now acts as a gatekeeper.
+ * It checks user permissions first. It also does 'lazy loading' (loads from disk only when needed) 
+ * and caches the result for future views. This makes the system secure and fast.
  */
 public class App {
 

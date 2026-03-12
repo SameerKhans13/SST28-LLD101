@@ -1,15 +1,13 @@
 import java.util.*;
 
 public class BookingRequest {
-    private final RoomType roomType;
-    private final List<AddOn> addOns;
+    public final RoomType roomType;
+    public final List<AddOn> addOns;
 
     public BookingRequest(RoomType roomType, List<AddOn> addOns) {
+        if (roomType == null) throw new IllegalArgumentException("roomType");
+        if (addOns == null) throw new IllegalArgumentException("addOns");
         this.roomType = roomType;
-        // defensively copy to prevent external mutation
-        this.addOns = new ArrayList<>(addOns);
+        this.addOns = List.copyOf(addOns);
     }
-
-    public RoomType getRoomType() { return roomType; }
-    public List<AddOn> getAddOns() { return Collections.unmodifiableList(addOns); }
 }

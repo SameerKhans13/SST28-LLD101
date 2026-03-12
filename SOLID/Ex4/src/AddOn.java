@@ -1,13 +1,21 @@
-public enum AddOn {
-    MESS(1000.0), LAUNDRY(500.0), GYM(300.0);
+public enum AddOn implements PricingComponent {
+    MESS(1000.0),
+    LAUNDRY(500.0),
+    GYM(300.0);
 
-    private final double price;
+    private final Money monthly;
 
-    AddOn(double price) {
-        this.price = price;
+    AddOn(double monthly) {
+        this.monthly = new Money(monthly);
     }
 
-    public double getPrice() {
-        return price;
+    @Override
+    public Money monthly() {
+        return monthly;
+    }
+
+    @Override
+    public Money deposit() {
+        return Money.ZERO;
     }
 }

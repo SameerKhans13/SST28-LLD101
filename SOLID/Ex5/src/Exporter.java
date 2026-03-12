@@ -1,37 +1,43 @@
-/**
- * An exporter composes an {@link Encoder} and a {@link Deliverer}.
- *
- * <p>The <b>contract</b> for <code>export</code> is documented here so that
- * all consumers and implementations can rely on it:
- *
- * <ul>
- *   <li><b>Preconditions</b> – the request argument must be non-null.  The
- *       request fields may be null; encoders are responsible for handling
- *       that gracefully.</li>
- *   <li><b>Postconditions</b> – the method never throws a runtime exception
- *       for a well-formed request.  Any failure is reflected in the returned
- *       {@link ExportResult}.  The result object itself is non-null and its
- *       <code>bytes</code> field is never null.</li>
- *   <li>Callers are free to substitute one exporter for another without
- *       guarding with <code>instanceof</code> or catching exceptions.  In
- *       other words, the class is Liskov‑substitution–safe.</li>
- * </ul>
- */
-import java.util.Objects;
-
-public class Exporter {
+public abstract class Exporter {
     private final Encoder encoder;
-    private final Deliverer deliverer;
+    private final DeliveryPolicy policy;
 
-    public Exporter(Encoder encoder, Deliverer deliverer) {
+    /**
+     * Build an exporter by composing an encoder with an optional delivery policy.
+     */
+    protected Exporter(Encoder encoder, DeliveryPolicy policy) {
         this.encoder = encoder;
-        this.deliverer = deliverer;
+        this.policy = policy;
     }
 
-    public ExportResult export(ExportRequest req) {
-        Objects.requireNonNull(req, "request");
-        byte[] data = encoder.encode(req);
-        // encoder contract: never return null
-        return deliverer.deliver(data, encoder.contentType());
+    /**
+     * Perform the export.
+     *
+     * <p>Contract:
+     * <ul>
+     *   <li>{@code req} must not be null (checked explicitly).</li>
+     *   <li>if {@code req.title} or {@code req.body} are null they are
+     *       treated as the empty string.</li>
+     *   <li>The returned {@link ExportResult} and its fields are non-null.</li>
+     * </ul>
+     *
+     * <p>The method normalises the request before passing it to the
+     * {@linkplain DeliveryPolicy policy} and {@linkplain Encoder encoder},
+     * so implementations can assume non-null title/body.  Throwing
+     * runtime exceptions for unsupported content (e.g. PDF size limit) is
+     * the job of a policy; encoders just encode whatever they receive.
+     */
+    public final ExportResult export(ExportRequest req) {
+        if (req == null) {
+            throw new IllegalArgumentException("request cannot be null");
+        }
+        // normalise null fields once, rather than each encoder handling them
+        ExportRequest safe = new ExportRequest(
+                req.title == null ? "" : req.title,
+                req.body == null ? "" : req.body);
+
+        policy.validate(safe);
+        byte[] bytes = encoder.encode(safe);
+        return new ExportResult(encoder.contentType(), bytes);
     }
 }

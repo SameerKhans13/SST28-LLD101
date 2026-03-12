@@ -3,6 +3,14 @@ package com.example.payments;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Problem: Earlier, our OrderService was tightly coupled with specific SDKs like FastPay and SafeCash.
+ * If we wanted to add a new payment provider, we had to change the core OrderService code (violating OCP open/closed principal).
+ * 
+ * Solution: We used the Adapter Design Pattern here. We created a common PaymentGateway interface.
+ * The adapters (FastPayAdapter & SafeCashAdapter) act as a bridge between our system and the outside SDKs.
+ * Now, OrderService only talks to the interface, which makes our design clean and flexible.
+ */
 public class App {
     public static void main(String[] args) {
         Map<String, PaymentGateway> registry = new HashMap<>();
